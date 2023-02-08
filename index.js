@@ -9,6 +9,7 @@ fastify.register(require("@fastify/redis"), {
 
 fastify.register(require("./routes/app.routes"));
 fastify.register(require("./routes/entity.routes"));
+fastify.register(require("./routes/entity_tags.routes"));
 
 const start = async () => {
     try {
