@@ -3,6 +3,7 @@
 const Joi = require("joi");
 
 const { validatorCompiler } = require("../utils/validatorCompiler.util");
+const { appsKey } = require("../utils/keys.util");
 const { appSchema } = require("../schema/app.schema");
 
 /**
@@ -14,7 +15,7 @@ async function routes(fastify, options) {
     fastify.get("/api/apps", async (request, reply) => {
         const client = fastify.redis;
 
-        const apps = await client.smembers(`apps`);
+        const apps = await client.smembers(appsKey());
 
         if (apps.length === 0) {
             reply.status(404);
@@ -30,7 +31,7 @@ async function routes(fastify, options) {
     }, async (request, reply) => {
         const client = fastify.redis;
         const { app_name } = request.body;
-        await client.sadd("apps", app_name);
+        await client.sadd(appsKey(), app_name);
 
         reply.status(201);
     });
@@ -43,8 +44,13 @@ async function routes(fastify, options) {
         const client = fastify.redis;
         const { app_name } = request.params;
 
-        // TODO: Multi, remove associated entities, tags etc.
-        await client.srem("apps", app_name);
+        await client
+            .multi()
+            .srem(appsKey(), app_name)
+            .del(appEntitiesKey(app_name), entity_name)
+            .del(appEntityTagsKey(app_name, entity_name), entity_tag_name)
+            .del(taggedWithKey(app_name, entity_name, tag_name))
+            .exec();
 
         reply.status(204);
     });

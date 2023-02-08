@@ -5,6 +5,7 @@ const Joi = require("joi");
 const { validatorCompiler } = require("../utils/validatorCompiler.util");
 const { appSchema } = require("../schema/app.schema");
 const { entitySchema } = require("../schema/entity.schema");
+const { appEntitiesKey } = require("../utils/keys.util");
 
 /**
  * Encapsulates Entity routes
@@ -19,7 +20,7 @@ async function routes(fastify, options) {
     }, async (request, reply) => {
         const client = fastify.redis;
         const { app_name } = request.params;
-        const entities = await client.smembers(`apps!${app_name}`);
+        const entities = await client.smembers(appEntitiesKey(app_name));
 
         if (entities.length === 0) {
             reply.status(404);
@@ -38,7 +39,7 @@ async function routes(fastify, options) {
         const { app_name } = request.params;
         const { entity_name } = request.body;
 
-        await client.sadd(`app!${app_name}!entities`, entity_name);
+        await client.sadd(appEntitiesKey(app_name), entity_name);
 
         reply.status(201);
     });
@@ -51,10 +52,15 @@ async function routes(fastify, options) {
         const client = fastify.redis;
         const { app_name, entity_name } = request.params;
 
-        await client.srem(`app!${app_name}!entities`, entity_name);
+        await client
+            .multi()
+            .srem(appEntitiesKey(app_name), entity_name)
+            .del(appEntityTagsKey(app_name, entity_name), entity_tag_name)
+            .del(taggedWithKey(app_name, entity_name, tag_name))
+            .exec();
 
         reply.status(204);
-    })
+    });
 }
 
 module.exports = routes;
