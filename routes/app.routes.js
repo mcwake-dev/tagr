@@ -14,7 +14,6 @@ const { appSchema } = require("../schema/app.schema");
 async function routes(fastify, options) {
     fastify.get("/api/apps", async (request, reply) => {
         const client = fastify.redis;
-
         const apps = await client.smembers(appsKey());
 
         if (apps.length === 0) {
@@ -31,6 +30,7 @@ async function routes(fastify, options) {
     }, async (request, reply) => {
         const client = fastify.redis;
         const { app_name } = request.body;
+
         await client.sadd(appsKey(), app_name);
 
         reply.status(201);
