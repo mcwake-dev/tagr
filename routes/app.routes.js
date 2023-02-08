@@ -14,13 +14,13 @@ async function routes(fastify, options) {
     fastify.get("/api/apps", async (request, reply) => {
         const client = fastify.redis;
 
-        const entities = await client.smembers(`apps`);
+        const apps = await client.smembers(`apps`);
 
-        if (entities.length === 0) {
+        if (apps.length === 0) {
             reply.status(404);
         }
 
-        return entities;
+        return apps;
     });
 
     fastify.post("/api/apps", {
@@ -30,7 +30,7 @@ async function routes(fastify, options) {
     }, async (request, reply) => {
         const client = fastify.redis;
         const { app_name } = request.body;
-        client.sadd("apps", app_name);
+        await client.sadd("apps", app_name);
 
         reply.status(201);
     });
@@ -44,7 +44,7 @@ async function routes(fastify, options) {
         const { app_name } = request.params;
 
         // TODO: Multi, remove associated entities, tags etc.
-        client.srem("apps", app_name);
+        await client.srem("apps", app_name);
 
         reply.status(204);
     });
