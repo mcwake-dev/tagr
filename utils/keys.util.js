@@ -46,7 +46,7 @@ function appEntityTagsKey(app_name, entity_name) {
  * @param {String} tag_name Name of tag
  */
 function taggedWithKey(app_name, entity_name, tag_name) {
-    const key = `${appEntityKey(app_name, entity_name)}!${entity_name}!taggedwith!${tag_name}`;
+    const key = `${appEntityKey(app_name, entity_name)}!taggedwith!${tag_name}`;
 
     return key;
 }
